@@ -1,9 +1,12 @@
-import { Component, ReactNode } from "react";
+import { Component, createRef, ReactNode, RefObject } from "react";
 import { Button, Card, Icon, Page } from "react-onsenui";
 import Bota64 from "bota64";
 import ons from "onsenui";
 import permission from "../util/permission";
 import { isFirefox } from "react-device-detect";
+import { Dom as dom } from "googlers-tools";
+import saveAs from "file-saver";
+import chooseFile from "../util/chooseFile";
 
 namespace BotaTab {
   export interface States {
@@ -19,6 +22,7 @@ namespace BotaTab {
   export class Create extends Component<Props, States> {
     private bota: Bota64;
     private method: "encode" | "decode";
+    private fileSelect: RefObject<HTMLInputElement>;
 
     public constructor(props: Props | Readonly<Props>) {
       super(props);
@@ -32,6 +36,7 @@ namespace BotaTab {
       };
 
       this.bota = new Bota64();
+      this.fileSelect = createRef();
 
       this.handleInput = this.handleInput.bind(this);
       this.handleCopy = this.handleCopy.bind(this);
@@ -110,12 +115,24 @@ namespace BotaTab {
             </p>
             <div style={{ display: "flex", width: "100%" }}>
               <Button modifier="large" onClick={this.handleFunction} style={{ marginRight: "4px" }}>
-                {this.methodF} <Icon icon="md-lock" />
+                {this.methodF} <Icon icon={this.method === "encode" ? "md-lock" : "md-un-lock"} />
               </Button>
               <Button modifier="large" onClick={this.handleCopy} disabled={isFirefox} style={{ marginLeft: "4px" }}>
                 Copy <Icon icon="md-copy" />
               </Button>
             </div>
+            <Button
+              modifier="large"
+              onClick={() => {
+                dom.findBy(this.fileSelect, (ref: HTMLInputElement) => {
+                  ref.click();
+                });
+              }}
+              disabled={isFirefox}
+              style={{ marginTop: "8px" }}
+            >
+              File to {this.method} <Icon icon="md-file" />
+            </Button>
           </section>
           <Card>
             <div className="title right">Output</div>
@@ -123,6 +140,25 @@ namespace BotaTab {
               <span>{output}</span>
             </div>
           </Card>
+          <input
+            ref={this.fileSelect}
+            type="file"
+            style={{ display: "none" }}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              chooseFile(event, (event: any, file: any, input: any) => {
+                // Keep that for debugging purposes
+                // console.log(input.files[0].name);
+                // console.log(event.target.result);
+                // console.log(this.bota[this.method](event.target.result));
+                const blob = new Blob([this.bota[this.method](event.target.result)], { type: "text/plain;charset=utf-8" });
+                if (this.method === "decode") {
+                  saveAs(blob, input.files[0].name.replace(/\.[^/.]+$/, ""));
+                } else {
+                  saveAs(blob, `${input.files[0].name}.bota64`);
+                }
+              });
+            }}
+          />
         </Page>
       );
     }

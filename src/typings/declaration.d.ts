@@ -1,4 +1,5 @@
 declare module "react-dom";
+declare module 'react-file-picker';
 
 declare module "*.css" {
   const content: Record<string, string>;
