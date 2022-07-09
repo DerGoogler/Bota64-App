@@ -1,12 +1,12 @@
-import { Component, createRef, ReactNode, RefObject } from "react";
+import { Component, ReactNode } from "react";
 import { Button, Card, Icon, Page, Ripple } from "react-onsenui";
 import Bota64 from "bota64";
 import ons from "onsenui";
 import permission from "../util/permission";
 import { isFirefox } from "react-device-detect";
-import { Dom as dom } from "googlers-tools";
 import saveAs from "file-saver";
 import chooseFile from "../util/chooseFile";
+import pkg from "./../../package.json";
 
 namespace BotaTab {
   export interface States {
@@ -17,6 +17,24 @@ namespace BotaTab {
 
   export interface Props {
     method: "encode" | "decode";
+  }
+
+  interface FILE_META {
+    meta: {
+      date: string;
+      usedBota64: boolean;
+      version: {
+        app: string;
+        lib: string;
+      };
+    };
+    file: {
+      name: string;
+      extension: string;
+      originalName: string;
+      outputName: string;
+    };
+    content: string;
   }
 
   export class Create extends Component<Props, States> {
@@ -44,6 +62,19 @@ namespace BotaTab {
 
     private get methodF(): "encode" | "decode" | string {
       return this.method.charAt(0).toUpperCase() + this.method.slice(1);
+    }
+
+    private getFileExtension(name: string): string {
+      return name.slice((Math.max(0, name.lastIndexOf(".")) || Infinity) + 1);
+    }
+
+    private isJsonString(str: string): boolean {
+      try {
+        JSON.parse(str);
+      } catch (e) {
+        return false;
+      }
+      return true;
     }
 
     public componentDidMount(): void {
@@ -80,31 +111,60 @@ namespace BotaTab {
 
     private handleFileChange(event: React.ChangeEvent<any>): void {
       chooseFile(event, (event: any, file: any, input: any) => {
-        // Keep that for debugging purposes
-        // console.log(input.files[0].name);
-        // console.log(event.target.result);
-        // console.log(this.bota[this.method](event.target.result));
+        try {
+          // Keep that for debugging purposes
+          // console.log(input.files[0].name);
+          // console.log(event.target.result);
+          // console.log(this.bota[this.method](event.target.result));
 
-        if (this.method === "decode") {
-          try {
-            const ctnt: { isBota64: boolean; filename: string; content: string } = JSON.parse(event.target.result);
-            if (ctnt.isBota64) {
+          if (this.method === "decode") {
+            const ctnt: FILE_META = JSON.parse(event.target.result);
+            if (ctnt.meta.usedBota64) {
               const blob = new Blob([this.bota.decode(ctnt.content)], { type: "text/plain;charset=utf-8" });
-              saveAs(blob, ctnt.filename);
+              saveAs(blob, ctnt.file.originalName);
             } else {
               ons.notification.alert("File isn't an Bota64 file");
             }
-          } catch (error: any) {
-            ons.notification.alert(error.message);
+          } else {
+            const _P: FILE_META = this.isJsonString(event.target.result)
+              ? JSON.parse(event.target.result)
+              : {
+                  meta: {
+                    usedBota64: false,
+                  },
+                  content: event.target.result,
+                };
+            const d = () => ons.notification.alert("Re-encoding isn't allowed!");
+            if (_P.meta.usedBota64) {
+              d();
+            } else {
+              if (this.getFileExtension(input.files[0].name) != "bota64") {
+                const content: FILE_META = {
+                  meta: {
+                    date: new Date().toString(),
+                    usedBota64: true,
+                    version: {
+                      app: pkg.version,
+                      lib: this.bota.version,
+                    },
+                  },
+                  file: {
+                    name: input.files[0].name.replace(/\.[^/.]+$/, ""),
+                    extension: this.getFileExtension(input.files[0].name),
+                    originalName: input.files[0].name,
+                    outputName: `${input.files[0].name.replace(/\.[^/.]+$/, "")}.bota64`,
+                  },
+                  content: this.bota.encode(event.target.result),
+                };
+                const blob = new Blob([JSON.stringify(content, null, 4)], { type: "text/plain;charset=utf-8" });
+                saveAs(blob, `${input.files[0].name.replace(/\.[^/.]+$/, "")}.bota64`);
+              } else {
+                d();
+              }
+            }
           }
-        } else {
-          const content = {
-            isBota64: true,
-            filename: input.files[0].name,
-            content: this.bota.encode(event.target.result),
-          };
-          const blob = new Blob([JSON.stringify(content, null, 4)], { type: "text/plain;charset=utf-8" });
-          saveAs(blob, `${input.files[0].name.replace(/\.[^/.]+$/, "")}.bota64`);
+        } catch (error: any) {
+          ons.notification.alert(error.message);
         }
       });
     }
@@ -143,7 +203,7 @@ namespace BotaTab {
                 }}
               ></textarea>
             </p>
-            
+
             <div style={{ display: "flex", width: "100%" }}>
               <Button modifier="large" onClick={this.handleFunction} style={{ marginRight: "4px" }}>
                 {this.methodF} <Icon icon={this.method === "encode" ? "md-lock" : "md-lock-open"} />
@@ -166,7 +226,6 @@ namespace BotaTab {
               accept={this.method === "decode" ? ".bota64" : ""}
               onChange={this.handleFileChange}
             />
-
           </section>
           <Card>
             <div className="title right">Output</div>

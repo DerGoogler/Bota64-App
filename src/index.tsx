@@ -3,10 +3,9 @@
 import jss from "jss";
 import preset from "jss-preset-default";
 import { Dom as dom } from "googlers-tools";
-import { Icon, List, ListHeader, ListItem, ListTitle, Page, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab, Toolbar, ToolbarButton } from "react-onsenui";
+import { BottomToolbar, Icon, List, ListHeader, ListItem, ListTitle, Page, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab, Toolbar, ToolbarButton } from "react-onsenui";
 import { Component, ReactNode } from "react";
-// import jszip from "jszip";
-// import { saveAs } from "file-saver";
+import { Property } from "csstype";
 
 // Styles
 import theme from "./styles/theme";
@@ -162,7 +161,32 @@ class App extends Component<Props, States> {
           </Page>
         </SplitterSide>
         <SplitterContent>
-          <Page renderToolbar={this.renderToolbar}>
+          <Page
+            renderToolbar={this.renderToolbar}
+            renderBottomToolbar={() => {
+              const mozPreSpace = "-moz-pre-space" as Property.WhiteSpace;
+              return (
+                <BottomToolbar
+                  style={{ backgroundImage: "none", backgroundColor: "transparent", display: "flex", alignItems: "center", whiteSpace: mozPreSpace, justifyContent: "center", color: "#4a148c" }}
+                >
+                  {"Made with "}
+                  <Icon icon="md-favorite" />
+                  {" by"}
+                  <a
+                    href="https://dergoogler.com"
+                    style={{
+                      backgroundColor: "transparent",
+                      textAlign: "center",
+                      textDecoration: "none",
+                      display: "inline-block",
+                    }}
+                  >
+                    {" Der_Googler"}
+                  </a>
+                </BottomToolbar>
+              );
+            }}
+          >
             <Tabbar
               swipeable={true}
               position="auto"
