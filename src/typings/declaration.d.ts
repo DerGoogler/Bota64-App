@@ -1,5 +1,5 @@
 declare module "react-dom";
-declare module 'react-file-picker';
+declare module "react-file-picker";
 
 declare module "*.css" {
   const content: Record<string, string>;
@@ -605,6 +605,7 @@ declare module "react-onsenui" {
 
   export class ListHeader extends Component<
     {
+      children?: string;
       modifier?: string | undefined;
     },
     any

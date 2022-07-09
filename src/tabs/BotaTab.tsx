@@ -1,5 +1,5 @@
 import { Component, createRef, ReactNode, RefObject } from "react";
-import { Button, Card, Icon, Page } from "react-onsenui";
+import { Button, Card, Icon, Page, Ripple } from "react-onsenui";
 import Bota64 from "bota64";
 import ons from "onsenui";
 import permission from "../util/permission";
@@ -22,7 +22,6 @@ namespace BotaTab {
   export class Create extends Component<Props, States> {
     private bota: Bota64;
     private method: "encode" | "decode";
-    private fileSelect: RefObject<HTMLInputElement>;
 
     public constructor(props: Props | Readonly<Props>) {
       super(props);
@@ -36,8 +35,8 @@ namespace BotaTab {
       };
 
       this.bota = new Bota64();
-      this.fileSelect = createRef();
 
+      this.handleFileChange = this.handleFileChange.bind(this);
       this.handleInput = this.handleInput.bind(this);
       this.handleCopy = this.handleCopy.bind(this);
       this.handleFunction = this.handleFunction.bind(this);
@@ -79,6 +78,37 @@ namespace BotaTab {
       this.setState({ input: event.target.value });
     }
 
+    private handleFileChange(event: React.ChangeEvent<any>): void {
+      chooseFile(event, (event: any, file: any, input: any) => {
+        // Keep that for debugging purposes
+        // console.log(input.files[0].name);
+        // console.log(event.target.result);
+        // console.log(this.bota[this.method](event.target.result));
+
+        if (this.method === "decode") {
+          try {
+            const ctnt: { isBota64: boolean; filename: string; content: string } = JSON.parse(event.target.result);
+            if (ctnt.isBota64) {
+              const blob = new Blob([this.bota.decode(ctnt.content)], { type: "text/plain;charset=utf-8" });
+              saveAs(blob, ctnt.filename);
+            } else {
+              ons.notification.alert("File isn't an Bota64 file");
+            }
+          } catch (error: any) {
+            ons.notification.alert(error.message);
+          }
+        } else {
+          const content = {
+            isBota64: true,
+            filename: input.files[0].name,
+            content: this.bota.encode(event.target.result),
+          };
+          const blob = new Blob([JSON.stringify(content, null, 4)], { type: "text/plain;charset=utf-8" });
+          saveAs(blob, `${input.files[0].name.replace(/\.[^/.]+$/, "")}.bota64`);
+        }
+      });
+    }
+
     private handleCopy(): void {
       const { output } = this.state;
       if (!isFirefox) {
@@ -113,26 +143,30 @@ namespace BotaTab {
                 }}
               ></textarea>
             </p>
+            
             <div style={{ display: "flex", width: "100%" }}>
               <Button modifier="large" onClick={this.handleFunction} style={{ marginRight: "4px" }}>
-                {this.methodF} <Icon icon={this.method === "encode" ? "md-lock" : "md-un-lock"} />
+                {this.methodF} <Icon icon={this.method === "encode" ? "md-lock" : "md-lock-open"} />
               </Button>
               <Button modifier="large" onClick={this.handleCopy} disabled={isFirefox} style={{ marginLeft: "4px" }}>
                 Copy <Icon icon="md-copy" />
               </Button>
             </div>
-            <Button
-              modifier="large"
-              onClick={() => {
-                dom.findBy(this.fileSelect, (ref: HTMLInputElement) => {
-                  ref.click();
-                });
-              }}
-              disabled={isFirefox}
-              style={{ marginTop: "8px" }}
-            >
+
+            <label htmlFor={this.method + "_key"} className="button--large button--material button" style={{ marginTop: "8px" }}>
+              <Ripple />
               File to {this.method} <Icon icon="md-file" />
-            </Button>
+            </label>
+            <input
+              // ...
+              id={this.method + "_key"}
+              key={this.method + "_key"}
+              type="file"
+              style={{ display: "none" }}
+              accept={this.method === "decode" ? ".bota64" : ""}
+              onChange={this.handleFileChange}
+            />
+
           </section>
           <Card>
             <div className="title right">Output</div>
@@ -140,25 +174,6 @@ namespace BotaTab {
               <span>{output}</span>
             </div>
           </Card>
-          <input
-            ref={this.fileSelect}
-            type="file"
-            style={{ display: "none" }}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              chooseFile(event, (event: any, file: any, input: any) => {
-                // Keep that for debugging purposes
-                // console.log(input.files[0].name);
-                // console.log(event.target.result);
-                // console.log(this.bota[this.method](event.target.result));
-                const blob = new Blob([this.bota[this.method](event.target.result)], { type: "text/plain;charset=utf-8" });
-                if (this.method === "decode") {
-                  saveAs(blob, input.files[0].name.replace(/\.[^/.]+$/, ""));
-                } else {
-                  saveAs(blob, `${input.files[0].name}.bota64`);
-                }
-              });
-            }}
-          />
         </Page>
       );
     }

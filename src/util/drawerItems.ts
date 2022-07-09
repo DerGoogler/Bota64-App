@@ -2,18 +2,27 @@ import { DrawerListItems } from "..";
 
 const drawerItems: DrawerListItems[] = [
   {
-    title: "Bota64 Library",
-    onClick(hide) {
-      window.open("https://github.com/DerGoogler/Bota64", "_blank");
-      hide();
-    },
-  },
-  {
-    title: "Bota64 App Issues",
-    onClick(hide) {
-      window.open("https://github.com/DerGoogler/Bota64-App/issues", "_blank");
-      hide();
-    },
+    title: "GitHub",
+    content: [
+      {
+        children: "Bota64 Library",
+        tappable: true,
+        modifier: "chevron",
+        onClick<T>(hide: () => void, event: T) {
+          window.open("https://github.com/DerGoogler/Bota64", "_blank");
+          hide();
+        },
+      },
+      {
+        children: "Bota64 App Issues",
+        tappable: true,
+        modifier: "chevron",
+        onClick<T>(hide: () => void, event: T) {
+          window.open("https://github.com/DerGoogler/Bota64-App/issues", "_blank");
+          hide();
+        },
+      },
+    ],
   },
 ];
 
