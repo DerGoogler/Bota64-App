@@ -3,7 +3,7 @@
 import jss from "jss";
 import preset from "jss-preset-default";
 import { Dom as dom } from "googlers-tools";
-import { BottomToolbar, Icon, List, ListHeader, ListItem, ListTitle, Page, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab, Toolbar, ToolbarButton } from "react-onsenui";
+import { BottomToolbar, Icon, List, ListHeader, ListItem, Page, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab, Toolbar, ToolbarButton } from "react-onsenui";
 import { Component, ReactNode } from "react";
 import { Property } from "csstype";
 

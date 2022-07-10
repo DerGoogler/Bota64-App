@@ -3,15 +3,19 @@ import { Configuration } from "webpack";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 
+const defConfig = {
+  output: {
+    filename: "bundle/[name].bundle.js",
+    path: resolve(__dirname, "./dist/"),
+    assetModuleFilename: "files/[name].[ext]",
+  },
+};
+
 const config: Configuration = {
   entry: {
     app: ["./src/index.tsx"],
   },
-  output: {
-    filename: "bundle/[name].bundle.js",
-    path: resolve(__dirname, "dist"),
-    assetModuleFilename: "files/[name].[ext]",
-  },
+  ...defConfig,
   module: {
     rules: [
       {
@@ -23,6 +27,10 @@ const config: Configuration = {
         test: /(d)?\.ts(x)?$/,
         loader: "ts-loader",
         exclude: /node_modules/,
+      },
+      {
+        test: /\.pegjs$/,
+        use: ["babel-loader", "pegjs-loader"],
       },
       {
         test: /\.yaml$/,
@@ -78,4 +86,4 @@ const config: Configuration = {
   },
 };
 
-module.exports = config;
+export { defConfig, config };
