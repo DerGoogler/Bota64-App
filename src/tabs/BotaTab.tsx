@@ -1,5 +1,5 @@
 import { Component, ReactNode } from "react";
-import { Button, Card, Icon, Page, Ripple } from "react-onsenui";
+import { Button, Card, Dialog, Icon, List, ListHeader, ListItem, Page, Ripple, Switch } from "react-onsenui";
 import Bota64 from "bota64";
 import ons from "onsenui";
 import permission from "../util/permission";
@@ -7,12 +7,15 @@ import { isFirefox } from "react-device-detect";
 import saveAs from "file-saver";
 import chooseFile from "../util/chooseFile";
 import pkg from "./../../package.json";
+import UTF8 from "../util/UTF8";
 
 namespace BotaTab {
   export interface States {
     input: string;
     output: string;
     clipboardState: string;
+    useUnit8Array: boolean;
+    dialogShown: boolean;
   }
 
   export interface Props {
@@ -22,7 +25,7 @@ namespace BotaTab {
   interface FILE_META {
     meta: {
       date: string;
-      usedBota64: boolean;
+      usedMethod: string;
       version: {
         app: string;
         lib: string;
@@ -34,12 +37,14 @@ namespace BotaTab {
       originalName: string;
       outputName: string;
     };
-    content: string;
+    content: any;
   }
 
   export class Create extends Component<Props, States> {
     private bota: Bota64;
     private method: "encode" | "decode";
+    private isEncode: boolean;
+    private isDecode: boolean;
 
     public constructor(props: Props | Readonly<Props>) {
       super(props);
@@ -50,10 +55,17 @@ namespace BotaTab {
         input: "",
         output: "Empty",
         clipboardState: "",
+        useUnit8Array: false,
+        dialogShown: false,
       };
 
       this.bota = new Bota64();
 
+      this.isEncode = this.method === "encode";
+      this.isDecode = this.method === "decode";
+
+      this.showDialog = this.showDialog.bind(this);
+      this.hideDialog = this.hideDialog.bind(this);
       this.handleFileChange = this.handleFileChange.bind(this);
       this.handleInput = this.handleInput.bind(this);
       this.handleCopy = this.handleCopy.bind(this);
@@ -110,6 +122,8 @@ namespace BotaTab {
     }
 
     private handleFileChange(event: React.ChangeEvent<any>): void {
+      const { useUnit8Array } = this.state;
+
       chooseFile(event, (event: any, file: any, input: any) => {
         try {
           // Keep that for debugging purposes
@@ -117,32 +131,42 @@ namespace BotaTab {
           // console.log(event.target.result);
           // console.log(this.bota[this.method](event.target.result));
 
-          if (this.method === "decode") {
+          if (this.isDecode) {
             const ctnt: FILE_META = JSON.parse(event.target.result);
-            if (ctnt.meta.usedBota64) {
-              const blob = new Blob([this.bota.decode(ctnt.content)], { type: "text/plain;charset=utf-8" });
-              saveAs(blob, ctnt.file.originalName);
-            } else {
-              ons.notification.alert("File isn't an Bota64 file");
+            const svfFile = (blob: BlobPart[]) => {
+              const blob_ = new Blob(blob, { type: "text/plain;charset=utf-8" });
+              saveAs(blob_, ctnt.file.originalName);
+            };
+            switch (ctnt.meta.usedMethod) {
+              case "Bota64":
+                svfFile([this.bota.decode(ctnt.content)]);
+                break;
+              case "Bota64/Unit8Array":
+                svfFile([this.bota.decode(UTF8.decode(Object.values(ctnt.content)))]);
+                break;
+
+              default:
+                ons.notification.alert("File isn't an Bota64 file");
+                break;
             }
           } else {
             const _P: FILE_META = this.isJsonString(event.target.result)
               ? JSON.parse(event.target.result)
               : {
                   meta: {
-                    usedBota64: false,
+                    usedMethod: "Bota64",
                   },
                   content: event.target.result,
                 };
             const d = () => ons.notification.alert("Re-encoding isn't allowed!");
-            if (_P.meta.usedBota64) {
+            if (_P.meta.usedMethod === "Bota64") {
               d();
             } else {
               if (this.getFileExtension(input.files[0].name) != "bota64") {
-                const content: FILE_META = {
+                let content: FILE_META = {
                   meta: {
                     date: new Date().toString(),
-                    usedBota64: true,
+                    usedMethod: "Bota64",
                     version: {
                       app: pkg.version,
                       lib: this.bota.version,
@@ -156,6 +180,13 @@ namespace BotaTab {
                   },
                   content: this.bota.encode(event.target.result),
                 };
+
+                console.log(content.content);
+                if (useUnit8Array) {
+                  content.meta.usedMethod = "Bota64/Unit8Array";
+                  content.content = JSON.parse(JSON.stringify(UTF8.encode(this.bota.encode(event.target.result))));
+                  console.log(content.content);
+                }
                 const blob = new Blob([JSON.stringify(content, null, 4)], { type: "text/plain;charset=utf-8" });
                 saveAs(blob, `${input.files[0].name.replace(/\.[^/.]+$/, "")}.bota64`);
               } else {
@@ -182,58 +213,93 @@ namespace BotaTab {
       }
     }
 
+    private showDialog() {
+      this.setState({ dialogShown: true });
+    }
+
+    private hideDialog() {
+      this.setState({ dialogShown: false });
+    }
+
     public render(): ReactNode {
-      const { input, output } = this.state;
+      const { input, output, useUnit8Array, dialogShown } = this.state;
 
       return (
-        <Page>
-          <section style={{ margin: "8px" }}>
-            <p>
-              <textarea
-                className="textarea textarea--transparent"
-                rows={3}
-                value={input}
-                placeholder={`Your text to ${this.method}`}
-                onChange={this.handleInput}
-                style={{
-                  width: "100%",
-                  borderRadius: "8px",
-                  padding: "8px",
-                  border: "solid #dbdbdb 1px",
-                }}
-              ></textarea>
-            </p>
-
-            <div style={{ display: "flex", width: "100%" }}>
-              <Button modifier="large" onClick={this.handleFunction} style={{ marginRight: "4px" }}>
-                {this.methodF} <Icon icon={this.method === "encode" ? "md-lock" : "md-lock-open"} />
-              </Button>
-              <Button modifier="large" onClick={this.handleCopy} disabled={isFirefox} style={{ marginLeft: "4px" }}>
-                Copy <Icon icon="md-copy" />
-              </Button>
-            </div>
-
-            <label htmlFor={this.method + "_key"} className="button--large button--material button" style={{ marginTop: "8px" }}>
-              <Ripple />
-              File to {this.method} <Icon icon="md-file" />
-            </label>
+        <>
+          <Page>
+            <section style={{ margin: "8px" }}>
+              <p>
+                <textarea
+                  className="textarea textarea--transparent"
+                  rows={3}
+                  value={input}
+                  placeholder={`Your text to ${this.method}`}
+                  onChange={this.handleInput}
+                  style={{
+                    width: "100%",
+                    borderRadius: "8px",
+                    padding: "8px",
+                    border: "solid #dbdbdb 1px",
+                  }}
+                ></textarea>
+              </p>
+              <div style={{ display: "flex", width: "100%" }}>
+                <Button modifier="large" onClick={this.handleFunction} style={{ marginRight: "4px" }}>
+                  {this.methodF} <Icon icon={this.isEncode ? "md-lock" : "md-lock-open"} />
+                </Button>
+                <Button modifier="large" onClick={this.handleCopy} disabled={isFirefox} style={{ marginLeft: "4px" }}>
+                  Copy <Icon icon="md-copy" />
+                </Button>
+              </div>
+              <div style={{ display: "flex", width: "100%", marginTop: "8px" }}>
+                <label htmlFor={this.method + "_key"} className="button--large button--material button" style={{ marginRight: !this.isDecode ? "4px" : "none" }}>
+                  <Ripple />
+                  File to {this.method} <Icon icon="md-file" />
+                </label>
+                {!this.isDecode ? (
+                  <Button modifier="large" onClick={this.showDialog} style={{ marginLeft: "4px" }}>
+                    Options <Icon icon="md-settings" />
+                  </Button>
+                ) : null}
+              </div>
+            </section>
+            <Card>
+              <div className="title right">Output</div>
+              <div className="content">
+                <span>{output}</span>
+              </div>
+            </Card>
+            <Dialog isOpen={dialogShown} isCancelable={true} onCancel={this.hideDialog}>
+              <div style={{ textAlign: "center", margin: "20px" }}>
+                <List>
+                  <ListHeader>Options</ListHeader>
+                  <ListItem>
+                    <div className="center">Use Unit8Array</div>
+                    <div className="right">
+                      <Switch
+                        checked={useUnit8Array}
+                        value={useUnit8Array}
+                        disabled={this.isDecode}
+                        onChange={(e: any) => {
+                          this.setState({ useUnit8Array: e.target.checked });
+                        }}
+                      />
+                    </div>
+                  </ListItem>
+                </List>
+              </div>
+            </Dialog>
             <input
               // ...
               id={this.method + "_key"}
               key={this.method + "_key"}
               type="file"
-              style={{ display: "none" }}
+              style={{ display: "none", marginRight: "4px" }}
               accept={this.method === "decode" ? ".bota64" : ""}
               onChange={this.handleFileChange}
             />
-          </section>
-          <Card>
-            <div className="title right">Output</div>
-            <div className="content">
-              <span>{output}</span>
-            </div>
-          </Card>
-        </Page>
+          </Page>
+        </>
       );
     }
   }

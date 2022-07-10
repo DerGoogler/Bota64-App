@@ -291,6 +291,7 @@ declare module "react-onsenui" {
 
   export class Dialog extends Component<
     {
+      children: React.ReactNode;
       onCancel?(): void;
       isOpen?: boolean | undefined;
       isCancelable?: boolean | undefined;
@@ -533,6 +534,7 @@ declare module "react-onsenui" {
       modifier?: string | undefined;
       onChange?(e: SwitchChangeEvent): void;
       checked?: boolean | undefined;
+      value?: boolean | undefined;
       disabled?: boolean | undefined;
       inputId?: string | undefined;
       name?: string | undefined;
