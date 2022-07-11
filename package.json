@@ -6,7 +6,8 @@
   "author": "Der_Googler",
   "scripts": {
     "dev": "webpack --config webpack.dev.ts",
-    "prod": "bun run dev && webpack --config webpack.prod.ts"
+    "prod": "bun run dev && webpack --config webpack.prod.ts",
+    "build-on-action": "webpack --config webpack.actions.ts"
   },
   "dependencies": {
     "@zip.js/zip.js": "^2.5.7",

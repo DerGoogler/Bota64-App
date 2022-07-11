@@ -23,4 +23,4 @@ jobs:
         BUN_INSTALL="/home/runner/.bun"
         PATH="$BUN_INSTALL/bin:$PATH"
         bun install --force
-        bun run prod
+        bun run build-on-action
