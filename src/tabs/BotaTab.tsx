@@ -1,8 +1,8 @@
 import { Component, ReactNode } from "react";
 import { Button, Card, Dialog, Icon, List, ListHeader, ListItem, Page, Ripple, Switch } from "react-onsenui";
-import Bota64 from "bota64";
+import Bota64, { Bota64Class, IBota64 } from "bota64";
 import ons from "onsenui";
-import permission from "../util/permission";
+import { dom } from "googlers-tools";
 import { isFirefox } from "react-device-detect";
 import saveAs from "file-saver";
 import chooseFile from "../util/chooseFile";
@@ -41,7 +41,7 @@ namespace BotaTab {
   }
 
   export class Create extends Component<Props, States> {
-    private bota: Bota64;
+    private bota: IBota64;
     private method: "encode" | "decode";
     private isEncode: boolean;
     private isDecode: boolean;
@@ -59,7 +59,7 @@ namespace BotaTab {
         dialogShown: false,
       };
 
-      this.bota = new Bota64();
+      this.bota = new Bota64Class();
 
       this.isEncode = this.method === "encode";
       this.isDecode = this.method === "decode";
@@ -95,7 +95,7 @@ namespace BotaTab {
           localStorage.setItem("use_firefox", String(g));
         });
       } else {
-        permission("clipboard-write").then((status: PermissionStatus) => {
+        dom.permission("clipboard-write").then((status: PermissionStatus) => {
           this.setState({ clipboardState: status.state });
         });
       }
@@ -169,7 +169,7 @@ namespace BotaTab {
                     usedMethod: "Bota64",
                     version: {
                       app: pkg.version,
-                      lib: this.bota.version,
+                      lib: this.bota.version(),
                     },
                   },
                   file: {

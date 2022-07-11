@@ -3,11 +3,13 @@
 coverage/
 dist/*
 !dist/index.html
-!dist/moduleOptions.json
 !vscode/settings.json
 node_modules/
 cdn_modules/
 *.log
+
+# --
+package-lock.json
 
 # OS generated files
 .DS_Store
