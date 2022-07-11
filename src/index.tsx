@@ -3,17 +3,18 @@
 import jss from "jss";
 import preset from "jss-preset-default";
 import { dom } from "googlers-tools";
-import { BottomToolbar, Icon, List, ListHeader, ListItem, Page, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab, Toolbar, ToolbarButton } from "react-onsenui";
+import { BottomToolbar, Icon, ListHeader, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab } from "react-onsenui";
+import { List, Page, Toolbar, ToolbarButton } from "react-onsenuix";
 import { Component, ReactNode } from "react";
+import BotaTab from "./tabs/BotaTab";
+import drawerItems from "./util/drawerItems";
+import { isFirefox } from "react-device-detect";
 import { Property } from "csstype";
 
 // Styles
 import theme from "./styles/theme";
 import "./styles/default.scss";
 import "onsenui/css/onsenui.css";
-import BotaTab from "./tabs/BotaTab";
-import drawerItems from "./util/drawerItems";
-import { isFirefox } from "react-device-detect";
 
 interface States {
   index: number;
@@ -64,14 +65,14 @@ class App extends Component<Props, States> {
   private renderToolbar(): JSX.Element {
     const titles = ["Encode", "Decode"];
     return (
-      <Toolbar>
-        <div className="left">
+      <Toolbar.Body>
+        <Toolbar.Left>
           <ToolbarButton onClick={this.show}>
             <Icon icon="md-menu" />
           </ToolbarButton>
-        </div>
-        <div className="center">{titles[this.state.index]}</div>
-      </Toolbar>
+        </Toolbar.Left>
+        <Toolbar.Center>{titles[this.state.index]}</Toolbar.Center>
+      </Toolbar.Body>
     );
   }
 
@@ -138,7 +139,7 @@ class App extends Component<Props, States> {
               />
               <h3 style={{ color: "white" }}>Bota64</h3>
             </div>
-            <List
+            <List.Body
               dataSource={drawerItems}
               renderRow={(item: DrawerListItems): JSX.Element => (
                 <>
@@ -146,7 +147,7 @@ class App extends Component<Props, States> {
                   {item.content.map(
                     (contentItem: DrawerListItemsContent): JSX.Element => (
                       <>
-                        <ListItem
+                        <List.Item
                           key={`${item.title}_item`}
                           {...contentItem}
                           onClick={(event: React.MouseEvent<any, MouseEvent>) => {

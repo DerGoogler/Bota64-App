@@ -1,6 +1,7 @@
-import { Component, ReactNode } from "react";
-import { Button, Card, Dialog, Icon, List, ListHeader, ListItem, Page, Ripple, Switch } from "react-onsenui";
-import Bota64, { Bota64Class, IBota64 } from "bota64";
+import { Component, createElement, ReactNode } from "react";
+import { Dialog, Icon, List, ListHeader, ListItem, Ripple, Switch } from "react-onsenui";
+import { Button, Card, Page } from "react-onsenuix";
+import { Bota64, IBota64 } from "bota64";
 import ons from "onsenui";
 import { dom } from "googlers-tools";
 import { isFirefox } from "react-device-detect";
@@ -57,7 +58,8 @@ namespace BotaTab {
         dialogShown: false,
       };
 
-      this.bota = new Bota64Class();
+      this.bota = new Bota64();
+      this.bota.useAdvanced(true);
 
       this.isEncode = this.method === "encode";
       this.isDecode = this.method === "decode";
@@ -108,7 +110,7 @@ namespace BotaTab {
     private handleFunction(): void {
       const { input } = this.state;
       if (input != "") {
-        const work = this.bota[this.method](input);
+        const work = this.bota[this.method](input, "default");
         this.setState({ output: work });
       } else {
         ons.notification.toast(`You can't ${this.method} empty inputs`, { timeout: 1000, animation: "fall" });
@@ -126,6 +128,8 @@ namespace BotaTab {
           // console.log(input.files[0].name);
           // console.log(event.target.result);
           // console.log(this.bota[this.method](event.target.result));
+
+          console.log(input.files[0]);
 
           if (this.isDecode) {
             const ctnt: FILE_META = JSON.parse(event.target.result);
@@ -183,7 +187,7 @@ namespace BotaTab {
                   content.content = JSON.parse(JSON.stringify(UTF8.encode(this.bota.encode(event.target.result))));
                   console.log(content.content);
                 }
-                const blob = new Blob([JSON.stringify(content, null, 4)], { type: "text/plain;charset=utf-8" });
+                const blob = new Blob([JSON.stringify(content, null, 4)], { type: "bota64/default" });
                 saveAs(blob, `${input.files[0].name.replace(/\.[^/.]+$/, "")}.bota64`);
               } else {
                 d();
@@ -254,12 +258,12 @@ namespace BotaTab {
                 </label>
               </div>
             </section>
-            <Card>
-              <div className="title right">Output</div>
-              <div className="content">
+            <Card.Body>
+              <Card.Title>Output</Card.Title>
+              <Card.Content>
                 <span>{output}</span>
-              </div>
-            </Card>
+              </Card.Content>
+            </Card.Body>
             <input
               // ...
               id={this.method + "_key"}
