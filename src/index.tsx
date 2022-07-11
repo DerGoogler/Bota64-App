@@ -13,6 +13,7 @@ import "./styles/default.scss";
 import "onsenui/css/onsenui.css";
 import BotaTab from "./tabs/BotaTab";
 import drawerItems from "./util/drawerItems";
+import { isFirefox } from "react-device-detect";
 
 interface States {
   index: number;
@@ -164,7 +165,7 @@ class App extends Component<Props, States> {
           <Page
             renderToolbar={this.renderToolbar}
             renderBottomToolbar={() => {
-              const mozPreSpace = "-moz-pre-space" as Property.WhiteSpace;
+              const mozPreSpace = isFirefox ? ("-moz-pre-space" as Property.WhiteSpace) : "break-spaces";
               return (
                 <BottomToolbar
                   style={{ backgroundImage: "none", backgroundColor: "transparent", display: "flex", alignItems: "center", whiteSpace: mozPreSpace, justifyContent: "center", color: "#4a148c" }}

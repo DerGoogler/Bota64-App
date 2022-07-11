@@ -3,6 +3,21 @@ import { Configuration } from "webpack";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 
+const onlyLocal = (arg: any) => {
+  if (process.env.HOME === "/home/runner/") {
+    if (typeof arg === "function") {
+      console.log("\x1b[31m%s\x1b[0m", `${arg.name} was prevented to run.`);
+    } else if (typeof arg === "function" && /^\s*class\s+/.test(arg.toString())) {
+      console.log("\x1b[31m%s\x1b[0m", `${arg.constructor.name} was prevented to run.`);
+    } else {
+      console.log("\x1b[31m%s\x1b[0m", `unknown was prevented to run.`);
+    }
+    return null;
+  } else {
+    return arg;
+  }
+};
+
 const defConfig = {
   output: {
     filename: "bundle/[name].bundle.js",
@@ -38,7 +53,7 @@ const config: Configuration = {
       },
       {
         test: /\.(scss|css)$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+        use: [onlyLocal(MiniCssExtractPlugin.loader), "css-loader", "sass-loader"],
       },
       {
         test: /\.(eot|woff|woff2|ttf|svg|png|jpe?g|gif)(\?\S*)?$/,
@@ -64,7 +79,7 @@ const config: Configuration = {
         },
       },
     },
-    minimizer: [new CssMinimizerPlugin()],
+    minimizer: [onlyLocal(new CssMinimizerPlugin())],
     minimize: true,
   },
   performance: {
@@ -86,4 +101,4 @@ const config: Configuration = {
   },
 };
 
-export { defConfig, config };
+export { defConfig, config, onlyLocal };

@@ -14,7 +14,6 @@ namespace BotaTab {
     input: string;
     output: string;
     clipboardState: string;
-    useUnit8Array: boolean;
     dialogShown: boolean;
   }
 
@@ -55,7 +54,6 @@ namespace BotaTab {
         input: "",
         output: "Empty",
         clipboardState: "",
-        useUnit8Array: false,
         dialogShown: false,
       };
 
@@ -122,8 +120,6 @@ namespace BotaTab {
     }
 
     private handleFileChange(event: React.ChangeEvent<any>): void {
-      const { useUnit8Array } = this.state;
-
       chooseFile(event, (event: any, file: any, input: any) => {
         try {
           // Keep that for debugging purposes
@@ -182,7 +178,7 @@ namespace BotaTab {
                 };
 
                 console.log(content.content);
-                if (useUnit8Array) {
+                if (this.state.input === "Bota64/Unit8Array") {
                   content.meta.usedMethod = "Bota64/Unit8Array";
                   content.content = JSON.parse(JSON.stringify(UTF8.encode(this.bota.encode(event.target.result))));
                   console.log(content.content);
@@ -222,7 +218,7 @@ namespace BotaTab {
     }
 
     public render(): ReactNode {
-      const { input, output, useUnit8Array, dialogShown } = this.state;
+      const { input, output } = this.state;
 
       return (
         <>
@@ -252,15 +248,10 @@ namespace BotaTab {
                 </Button>
               </div>
               <div style={{ display: "flex", width: "100%", marginTop: "8px" }}>
-                <label htmlFor={this.method + "_key"} className="button--large button--material button" style={{ marginRight: !this.isDecode ? "4px" : "none" }}>
+                <label htmlFor={this.method + "_key"} className="button--large button--material button">
                   <Ripple />
                   File to {this.method} <Icon icon="md-file" />
                 </label>
-                {!this.isDecode ? (
-                  <Button modifier="large" onClick={this.showDialog} style={{ marginLeft: "4px" }}>
-                    Options <Icon icon="md-settings" />
-                  </Button>
-                ) : null}
               </div>
             </section>
             <Card>
@@ -269,26 +260,6 @@ namespace BotaTab {
                 <span>{output}</span>
               </div>
             </Card>
-            <Dialog isOpen={dialogShown} isCancelable={true} onCancel={this.hideDialog}>
-              <div style={{ textAlign: "center", margin: "20px" }}>
-                <List>
-                  <ListHeader>Options</ListHeader>
-                  <ListItem>
-                    <div className="center">Use Unit8Array</div>
-                    <div className="right">
-                      <Switch
-                        checked={useUnit8Array}
-                        value={useUnit8Array}
-                        disabled={this.isDecode}
-                        onChange={(e: any) => {
-                          this.setState({ useUnit8Array: e.target.checked });
-                        }}
-                      />
-                    </div>
-                  </ListItem>
-                </List>
-              </div>
-            </Dialog>
             <input
               // ...
               id={this.method + "_key"}
