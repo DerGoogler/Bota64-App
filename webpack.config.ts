@@ -88,9 +88,11 @@ const config: Configuration = {
     maxAssetSize: 512000,
   },
   plugins: [
-    new MiniCssExtractPlugin({
-      filename: "bundle/[name].bundle.css",
-    }),
+    onlyLocal(
+      new MiniCssExtractPlugin({
+        filename: "bundle/[name].bundle.css",
+      })
+    ),
   ],
   resolveLoader: {
     modules: ["node_modules", join(process.env.NPM_CONFIG_PREFIX || __dirname, "lib/node_modules")],
