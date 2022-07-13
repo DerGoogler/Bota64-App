@@ -1,7 +1,6 @@
-import { Component, createElement, ReactNode } from "react";
-import { Dialog, Icon, List, ListHeader, ListItem, Ripple, Switch } from "react-onsenui";
-import { Button, Card, Page } from "react-onsenuix";
-import { Bota64, IBota64 } from "bota64";
+import { Ripple } from "react-onsenui";
+import { Button, Card, Icon, Page, ViewX, ViewXRenderData } from "react-onsenuix";
+import { Bota64Class, IBota64 } from "bota64";
 import ons from "onsenui";
 import { dom } from "googlers-tools";
 import { isFirefox } from "react-device-detect";
@@ -40,7 +39,7 @@ namespace BotaTab {
     content: any;
   }
 
-  export class Create extends Component<Props, States> {
+  export class Create extends ViewX<Props, States, HTMLElement> {
     private bota: IBota64;
     private method: "encode" | "decode";
     private isEncode: boolean;
@@ -58,8 +57,7 @@ namespace BotaTab {
         dialogShown: false,
       };
 
-      this.bota = new Bota64();
-      this.bota.useAdvanced(true);
+      this.bota = new Bota64Class();
 
       this.isEncode = this.method === "encode";
       this.isDecode = this.method === "decode";
@@ -70,6 +68,7 @@ namespace BotaTab {
       this.handleInput = this.handleInput.bind(this);
       this.handleCopy = this.handleCopy.bind(this);
       this.handleFunction = this.handleFunction.bind(this);
+      this.createView = this.createView.bind(this);
     }
 
     private get methodF(): "encode" | "decode" | string {
@@ -110,7 +109,7 @@ namespace BotaTab {
     private handleFunction(): void {
       const { input } = this.state;
       if (input != "") {
-        const work = this.bota[this.method](input, "default");
+        const work = this.bota[this.method](input);
         this.setState({ output: work });
       } else {
         ons.notification.toast(`You can't ${this.method} empty inputs`, { timeout: 1000, animation: "fall" });
@@ -124,13 +123,6 @@ namespace BotaTab {
     private handleFileChange(event: React.ChangeEvent<any>): void {
       chooseFile(event, (event: any, file: any, input: any) => {
         try {
-          // Keep that for debugging purposes
-          // console.log(input.files[0].name);
-          // console.log(event.target.result);
-          // console.log(this.bota[this.method](event.target.result));
-
-          console.log(input.files[0]);
-
           if (this.isDecode) {
             const ctnt: FILE_META = JSON.parse(event.target.result);
             const svfFile = (blob: BlobPart[]) => {
@@ -221,60 +213,56 @@ namespace BotaTab {
       this.setState({ dialogShown: false });
     }
 
-    public render(): ReactNode {
-      const { input, output } = this.state;
-
+    public createView(d: ViewXRenderData<Props, States, HTMLElement>): JSX.Element {
       return (
-        <>
-          <Page>
-            <section style={{ margin: "8px" }}>
-              <p>
-                <textarea
-                  className="textarea textarea--transparent"
-                  rows={3}
-                  value={input}
-                  placeholder={`Your text to ${this.method}`}
-                  onChange={this.handleInput}
-                  style={{
-                    width: "100%",
-                    borderRadius: "8px",
-                    padding: "8px",
-                    border: "solid #dbdbdb 1px",
-                  }}
-                ></textarea>
-              </p>
-              <div style={{ display: "flex", width: "100%" }}>
-                <Button modifier="large" onClick={this.handleFunction} style={{ marginRight: "4px" }}>
-                  {this.methodF} <Icon icon={this.isEncode ? "md-lock" : "md-lock-open"} />
-                </Button>
-                <Button modifier="large" onClick={this.handleCopy} disabled={isFirefox} style={{ marginLeft: "4px" }}>
-                  Copy <Icon icon="md-copy" />
-                </Button>
-              </div>
-              <div style={{ display: "flex", width: "100%", marginTop: "8px" }}>
-                <label htmlFor={this.method + "_key"} className="button--large button--material button">
-                  <Ripple />
-                  File to {this.method} <Icon icon="md-file" />
-                </label>
-              </div>
-            </section>
-            <Card.Body>
-              <Card.Title>Output</Card.Title>
-              <Card.Content>
-                <span>{output}</span>
-              </Card.Content>
-            </Card.Body>
-            <input
-              // ...
-              id={this.method + "_key"}
-              key={this.method + "_key"}
-              type="file"
-              style={{ display: "none", marginRight: "4px" }}
-              accept={this.method === "decode" ? ".bota64" : ""}
-              onChange={this.handleFileChange}
-            />
-          </Page>
-        </>
+        <Page>
+          <section style={{ margin: "8px" }}>
+            <p>
+              <textarea
+                className="textarea textarea--transparent"
+                rows={3}
+                value={d.s.input}
+                placeholder={`Your text to ${this.method}`}
+                onChange={this.handleInput}
+                style={{
+                  width: "100%",
+                  borderRadius: "8px",
+                  padding: "8px",
+                  border: "solid #dbdbdb 1px",
+                }}
+              ></textarea>
+            </p>
+            <div style={{ display: "flex", width: "100%" }}>
+              <Button modifier="large" onClick={this.handleFunction} style={{ marginRight: "4px" }}>
+                {this.methodF} <Icon icon={this.isEncode ? "md-lock" : "md-lock-open"} />
+              </Button>
+              <Button modifier="large" onClick={this.handleCopy} /*disabled={isFirefox}*/ style={{ marginLeft: "4px" }}>
+                Copy <Icon icon="md-copy" />
+              </Button>
+            </div>
+            <div style={{ display: "flex", width: "100%", marginTop: "8px" }}>
+              <label htmlFor={this.method + "_key"} className="button--large button--material button">
+                <Ripple />
+                File to {this.method} <Icon icon="md-file" />
+              </label>
+            </div>
+          </section>
+          <Card>
+            <Card.Title>Output</Card.Title>
+            <Card.Content>
+              <span>{d.s.output}</span>
+            </Card.Content>
+          </Card>
+          <input
+            // ...
+            id={this.method + "_key"}
+            key={this.method + "_key"}
+            type="file"
+            style={{ display: "none", marginRight: "4px" }}
+            accept={this.method === "decode" ? ".bota64" : ""}
+            onChange={this.handleFileChange}
+          />
+        </Page>
       );
     }
   }

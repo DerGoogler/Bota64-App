@@ -22,6 +22,15 @@ const drawerItems: DrawerListItems[] = [
           hide();
         },
       },
+      {
+        children: "React OnsenUiX",
+        tappable: true,
+        modifier: "chevron",
+        onClick<T>(hide: () => void, event: T) {
+          window.open("https://github.com/DerGoogler/react-onsenuix", "_blank");
+          hide();
+        },
+      },
     ],
   },
 ];

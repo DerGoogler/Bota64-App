@@ -3,9 +3,8 @@
 import jss from "jss";
 import preset from "jss-preset-default";
 import { dom } from "googlers-tools";
-import { BottomToolbar, Icon, ListHeader, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab } from "react-onsenui";
-import { List, Page, Toolbar, ToolbarButton } from "react-onsenuix";
-import { Component, ReactNode } from "react";
+import { ListHeader, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab } from "react-onsenui";
+import { List, Page, Toolbar, Icon, ActivityX, ActivityXRenderData, BottomToolbar } from "react-onsenuix";
 import BotaTab from "./tabs/BotaTab";
 import drawerItems from "./util/drawerItems";
 import { isFirefox } from "react-device-detect";
@@ -42,7 +41,7 @@ export interface DrawerListItems {
   content: DrawerListItemsContent[];
 }
 
-class App extends Component<Props, States> {
+class App extends ActivityX<Props, States> {
   public static displayName = "app";
 
   public constructor(props: Props | Readonly<Props>) {
@@ -55,6 +54,7 @@ class App extends Component<Props, States> {
     this.hide = this.hide.bind(this);
     this.show = this.show.bind(this);
     this.renderToolbar = this.renderToolbar.bind(this);
+    this.onCreate = this.onCreate.bind(this);
   }
 
   public componentDidMount(): void {
@@ -65,14 +65,14 @@ class App extends Component<Props, States> {
   private renderToolbar(): JSX.Element {
     const titles = ["Encode", "Decode"];
     return (
-      <Toolbar.Body>
+      <Toolbar>
         <Toolbar.Left>
-          <ToolbarButton onClick={this.show}>
+          <Toolbar.Button onClick={this.show}>
             <Icon icon="md-menu" />
-          </ToolbarButton>
+          </Toolbar.Button>
         </Toolbar.Left>
         <Toolbar.Center>{titles[this.state.index]}</Toolbar.Center>
-      </Toolbar.Body>
+      </Toolbar>
     );
   }
 
@@ -97,20 +97,18 @@ class App extends Component<Props, States> {
     this.setState({ isOpen: true });
   }
 
-  public render(): ReactNode {
-    const { isOpen } = this.state;
-
+  public onCreate(d: ActivityXRenderData<Props, States>): JSX.Element {
     return (
       <Splitter>
         <SplitterSide
           style={{
-            boxShadow: isOpen ? "0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)" : "none",
+            boxShadow: d.s.isOpen ? "0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)" : "none",
           }}
           side="left"
           width={300}
           collapse={true}
           swipeable={true}
-          isOpen={this.state.isOpen}
+          isOpen={d.s.isOpen}
           onClose={this.hide}
           onOpen={this.show}
         >
@@ -139,7 +137,7 @@ class App extends Component<Props, States> {
               />
               <h3 style={{ color: "white" }}>Bota64</h3>
             </div>
-            <List.Body
+            <List
               dataSource={drawerItems}
               renderRow={(item: DrawerListItems): JSX.Element => (
                 <>
@@ -150,6 +148,7 @@ class App extends Component<Props, States> {
                         <List.Item
                           key={`${item.title}_item`}
                           {...contentItem}
+                          // @ts-ignore
                           onClick={(event: React.MouseEvent<any, MouseEvent>) => {
                             contentItem.onClick!(this.hide, event);
                           }}
