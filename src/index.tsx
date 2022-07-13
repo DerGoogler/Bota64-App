@@ -3,8 +3,8 @@
 import jss from "jss";
 import preset from "jss-preset-default";
 import { dom } from "googlers-tools";
-import { ListHeader, Splitter, SplitterContent, SplitterSide, Tab, Tabbar, TabbarRenderTab } from "react-onsenui";
-import { List, Page, Toolbar, Icon, ActivityX, ActivityXRenderData, BottomToolbar } from "react-onsenuix";
+import { ListHeader, Splitter, SplitterContent, SplitterSide } from "react-onsenui";
+import { List, Page, Toolbar, Icon, ActivityX, ActivityXRenderData, BottomToolbar, TabbarRenderTab, Tab, Tabbar, TabbarEvent } from "react-onsenuix";
 import BotaTab from "./tabs/BotaTab";
 import drawerItems from "./util/drawerItems";
 import { isFirefox } from "react-device-detect";
@@ -42,7 +42,8 @@ export interface DrawerListItems {
 }
 
 class App extends ActivityX<Props, States> {
-  public static displayName = "app";
+  public static displayName: string = "app";
+  public static useContentBody: boolean = true;
 
   public constructor(props: Props | Readonly<Props>) {
     super(props);
@@ -80,11 +81,11 @@ class App extends ActivityX<Props, States> {
     return [
       {
         content: <BotaTab.Create method="encode" />,
-        tab: <Tab label="Encode" />,
+        tab: <Tab label="Encode" icon="md-lock" />,
       },
       {
         content: <BotaTab.Create method="decode" />,
-        tab: <Tab label="Decode" />,
+        tab: <Tab label="Decode" icon="md-lock-open" />,
       },
     ];
   }
@@ -191,9 +192,9 @@ class App extends ActivityX<Props, States> {
             <Tabbar
               swipeable={true}
               position="auto"
-              index={this.state.index}
-              onPreChange={(event: any): void => {
-                if (event.index != this.state.index) {
+              index={d.s.index}
+              onPreChange={(event: TabbarEvent): void => {
+                if (event.index != d.s.index) {
                   this.setState({ index: event.index });
                 }
               }}
